@@ -5,7 +5,7 @@
 #include "../utils/utils.h"
 #include <stdlib.h>
 
-int32_t get_glyph_index(TTF_Font *font, int16_t c) {
+int32_t get_glyph_index(TTF_Font *font, uint16_t c) {
 	if (!font) {
 		return -1;
 	}
@@ -19,16 +19,34 @@ int32_t get_glyph_index(TTF_Font *font, int16_t c) {
 	int i;
 	for (i = 0; i < cmap->num_subtables; i++) {
 		cmap_subTable *subtable = &cmap->subtables[i];
-		if (!subtable->glyph_index_array || c < 0 || c >= subtable->num_indices) {
-			continue;
+		if(subtable->format == 0) {
+			if (!subtable->glyph_index_array || c < 0 || c >= subtable->num_indices) {
+				continue;
+			}
+			return subtable->glyph_index_array[c];
+		} else if(subtable->format == 4) {
+			for (int j = 0; j < subtable->seg_count; j++)
+			{
+				if(c>=subtable->start_code[j]&&c<=subtable->end_code[j])
+				{
+					if(subtable->id_range_offset[j]==0){
+						return ((int16_t)c+(int16_t)subtable->id_delta[j])&0xffff;
+					}else{
+						int index = subtable->id_range_offset[j]/2 + c-subtable->start_code[j] - subtable->seg_count;
+						return subtable->glyph_index_array[index];
+					}
+				}
+			}
+			
 		}
-		return subtable->glyph_index_array[c];
-	}
 
+		
+	}
+	
 	return -1;
 }
 
-TTF_Glyph *get_glyph(TTF_Font *font, int16_t c) {
+TTF_Glyph *get_glyph(TTF_Font *font, uint16_t c) {
 	if (!font) {
 		return NULL;
 	}
@@ -41,6 +59,7 @@ TTF_Glyph *get_glyph(TTF_Font *font, int16_t c) {
 
 	// Lookup glyph index in cmap table
 	uint32_t glyph_index = get_glyph_index(font, c);
+	printf("glyph_index %d\n",glyph_index);
 	if (glyph_index < glyf->num_glyphs) {
 		TTF_Glyph *glyph = &glyf->glyphs[glyph_index];
 		glyph->index = glyph_index;
@@ -60,8 +79,10 @@ uint16_t get_glyph_advance_width(TTF_Font *font, TTF_Glyph *glyph) {
 		warn("failed to get glyph advance width");
 		return 0;
 	}
-
-	return hmtx->advance_width[glyph->index];
+	if(glyph->index >= hmtx->num_h_metrics)
+		return glyph->x_max;
+	else
+		return hmtx->advance_width[glyph->index];
 }
 
 int16_t get_glyph_left_side_bearing(TTF_Font *font, TTF_Glyph *glyph) {
@@ -75,7 +96,10 @@ int16_t get_glyph_left_side_bearing(TTF_Font *font, TTF_Glyph *glyph) {
 		return 0;
 	}
 
-	return hmtx->left_side_bearing[glyph->index];
+	if(glyph->index >= hmtx->num_h_metrics)
+		return hmtx->non_horizontal_left_side_bearing[glyph->index - hmtx->num_h_metrics];
+	else
+		return hmtx->left_side_bearing[glyph->index];
 }
 
 void free_simple_glyph(TTF_Glyph *glyph) {

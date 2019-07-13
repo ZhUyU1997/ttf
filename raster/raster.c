@@ -31,7 +31,7 @@ int raster_init(TTF_Font *font, uint16_t point, uint16_t dpi, uint32_t flags) {
 	return SUCCESS;
 }
 
-int draw_string(TTF_Font *font, TTF_Bitmap *canvas, int x, int y, const char *string) {
+int draw_string(TTF_Font *font, TTF_Bitmap *canvas, int x, int y, uint32_t *string, int len) {
 	CHECKPTR(font);
 	CHECKPTR(canvas);
 	CHECKPTR(string);
@@ -41,7 +41,7 @@ int draw_string(TTF_Font *font, TTF_Bitmap *canvas, int x, int y, const char *st
 	CHECKFAIL(IN(x, 0, canvas->w-1), warn("failed to draw string out of bounds"));
 	CHECKFAIL(IN(y, 0, canvas->h-1), warn("failed to draw string out of bounds"));
 
-	for (int i = 0; i < (int)strlen(string); i++) {
+	for (int i = 0; i < len; i++) {
 		TTF_Glyph *glyph = get_glyph(font, string[i]);
 		if (!glyph) {
 			warn("failed to get glyph for '%c'", string[i]);
@@ -92,6 +92,20 @@ int draw_glyph(TTF_Font *font, TTF_Bitmap *canvas, TTF_Glyph *glyph, int x, int 
 	// Draw glyph bitmap onto canvas
 	draw_bitmap(canvas, glyph->bitmap, x + lsb, y - ascent);
 
+	// for(int i=glyph->outline->x_min;i<glyph->outline->x_max;i++)
+	// 	bitmap_set(canvas, x + i, y - glyph->outline->y_min, 0x00ff0000);
+	// for(int i=glyph->outline->x_min;i<glyph->outline->x_max;i++)
+	// 	bitmap_set(canvas, x + i, y - glyph->outline->y_max, 0x00ff0000);
+	// for(int i=glyph->outline->y_min;i<glyph->outline->y_max;i++)
+	// 	bitmap_set(canvas, x + glyph->outline->x_min, y - i, 0x00ff0000);
+	// for(int i=glyph->outline->y_min;i<glyph->outline->y_max;i++)
+	// 	bitmap_set(canvas, x + glyph->outline->x_max, y - i, 0x00ff0000);
+	// for(int i=glyph->outline->y_min;i<glyph->outline->y_max;i++)
+	// 	bitmap_set(canvas, x + 0, y - i, 0x00ff0000);
+	// for(int i=glyph->outline->y_min;i<glyph->outline->y_max;i++)
+	// 	bitmap_set(canvas, x + 0, y - i, 0x00ff0000);
+	// for(int i=glyph->outline->x_min;i<glyph->outline->x_max;i++)
+	// 	bitmap_set(canvas, x + i, y - 0, 0x00ff0000);
 	RET;
 }
 
@@ -302,6 +316,7 @@ int render_curve(TTF_Bitmap *bitmap, TTF_Segment *curve, uint32_t c) {
 	if (!bitmap || !curve) {
 		return 0;
 	}
+
 	TTF_Segment line;
 	init_segment(&line, 2);
 

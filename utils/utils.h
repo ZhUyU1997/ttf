@@ -42,6 +42,7 @@ _release:								\
 	RETFAILRELEASE(PASS, RELEASE)
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) > (b)) ? (b) : (a))
 
 #define IN(x, a, b) ((x) >= (a) && (x) <= (b))
 
@@ -51,6 +52,6 @@ float symroundf(float f);
 void warn(const char *fmt, ...);
 void warnerr(const char *fmt, ...);
 
-int get_text_width(TTF_Font *font, const char *text);
+int get_text_width(TTF_Font *font, uint32_t *text);
 
 #endif /* UTILS_H */

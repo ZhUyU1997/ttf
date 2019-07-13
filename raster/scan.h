@@ -3,9 +3,14 @@
 
 #include "../base/types.h"
 
+typedef struct _TTF_intersections {
+	float x;
+	int status;
+} TTF_intersections;
+
 typedef struct _TTF_Scan_Line {
 	float y;
-	float *x;
+	TTF_intersections *iss;
 	int size_x;
 	int num_intersections;
 } TTF_Scan_Line;

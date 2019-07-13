@@ -54,14 +54,20 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	char *string;
+	uint32_t *string;
+	int len;
 	if (optind < argc) {
-		string = argv[optind];
+		uint32_t *dst;
+		len = utf8_to_ucs4_alloc(argv[optind],&dst,NULL);
+		string = dst;
 	} else {
-		string = "m";
+		uint32_t *dst;
+		len = utf8_to_ucs4_alloc("a甲b乙c丙d丁",&dst,NULL);
+		string = dst;
 	}
 
 	TTF_Font *font = load_font(font_filename);
+
 	raster_init(font, font_size, screen_dpi, render_method);
 
 	/* Calculate required size for output bitmap. */
@@ -72,7 +78,7 @@ int main(int argc, char* argv[]) {
 
 	TTF_Bitmap *out = create_bitmap(text_width + 2*padding, (ascent + descent) + 2*padding, 0xFFFFFF);
 
-	draw_string(font, out, (out->w - text_width)/2, (out->h - (ascent + descent))/2 + ascent, string);
+	draw_string(font, out, (out->w - text_width)/2, (out->h - (ascent + descent))/2 + ascent, string, len);
 
 	if (apply_gamma) {
 		set_bitmap_gamma(out, gamma);

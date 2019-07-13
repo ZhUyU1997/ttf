@@ -9,7 +9,7 @@ TAGFILE := .tags
 CC := gcc
 
 # C compiler flags
-CFLAGS := -Wall -Wextra -Werror -pedantic -std=c99 -I.
+CFLAGS := -Wall  -pedantic -std=c99 -I.
 
 # C preprocessor
 CPP := gcc

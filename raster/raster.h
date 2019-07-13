@@ -10,7 +10,7 @@ typedef enum _Raster_Opts {
 } Raster_Opts;
 
 int raster_init(TTF_Font *font, uint16_t point, uint16_t dpi, uint32_t flags);
-int draw_string(TTF_Font *font, TTF_Bitmap *canvas, int x, int y, const char *string);
+int draw_string(TTF_Font *font, TTF_Bitmap *canvas, int x, int y, uint32_t *string, int len);
 int draw_glyph(TTF_Font *font, TTF_Bitmap *canvas, TTF_Glyph *glyph, int x, int y);
 int raster_glyph(TTF_Font *font, TTF_Glyph *glyph);
 

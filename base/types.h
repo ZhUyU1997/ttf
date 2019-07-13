@@ -15,6 +15,11 @@ typedef struct _cmap_subTable {
 
 	uint16_t num_indices;
 	uint32_t *glyph_index_array;
+	uint16_t seg_count;
+	uint16_t *end_code;
+	uint16_t *start_code;
+	uint16_t *id_delta;
+	uint16_t *id_range_offset;
 } cmap_subTable;
 
 typedef struct _cmap_Table {

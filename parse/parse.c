@@ -495,7 +495,7 @@ int load_cmap_subtable(TTF_Font *font, cmap_subTable *subtable) {
 		case 4:
 			{
 				int i;
-				uint16_t seg_count = read_ushort(font->fd) / 2;
+				subtable->seg_count = read_ushort(font->fd) / 2;
 //				uint16_t search_range = read_ushort(font->fd);
 //				uint16_t entry_selector = read_ushort(font->fd);
 //				uint16_t range_shift = read_ushort(font->fd);
@@ -507,30 +507,30 @@ int load_cmap_subtable(TTF_Font *font, cmap_subTable *subtable) {
 				}
 
 				// Alloc arrays
-				uint16_t *end_code = (uint16_t *) malloc(seg_count * sizeof(*end_code));
-				if (!end_code) {
+				subtable->end_code = (uint16_t *) malloc(subtable->seg_count * sizeof(*subtable->end_code));
+				if (!subtable->end_code) {
 					warnerr("failed to alloc cmap format 4 endCode array");
 					return 0;
 				}
-				uint16_t *start_code = (uint16_t *) malloc(seg_count * sizeof(*start_code));
-				if (!start_code) {
+				subtable->start_code = (uint16_t *) malloc(subtable->seg_count * sizeof(*subtable->start_code));
+				if (!subtable->start_code) {
 					warnerr("failed to alloc cmap format 4 startCode array");
 					return 0;
 				}
-				uint16_t *id_delta = (uint16_t *) malloc(seg_count * sizeof(*id_delta));
-				if (!id_delta) {
+				subtable->id_delta = (uint16_t *) malloc(subtable->seg_count * sizeof(*subtable->id_delta ));
+				if (!subtable->id_delta) {
 					warnerr("failed to alloc cmap format 4 idDelta array");
 					return 0;
 				}
-				uint16_t *id_range_offset = (uint16_t *) malloc(seg_count * sizeof(*id_range_offset));
-				if (!id_range_offset) {
+				subtable->id_range_offset = (uint16_t *) malloc(subtable->seg_count * sizeof(*subtable->id_range_offset));
+				if (!subtable->id_range_offset) {
 					warnerr("failed to alloc cmap format 4 idRangeOffset array");
 					return 0;
 				}
 
 				// Read arrays
-				for (i = 0; i < seg_count; i++) {
-					end_code[i] = read_ushort(font->fd);
+				for (i = 0; i < subtable->seg_count; i++) {
+					subtable->end_code[i] = read_ushort(font->fd);
 				}
 //				uint16_t reserved_pad = read_ushort(font->fd);
 				// Skip one hword
@@ -538,14 +538,14 @@ int load_cmap_subtable(TTF_Font *font, cmap_subTable *subtable) {
 					warnerr("failed to seek in cmap subtable");
 					return 0;
 				}
-				for (i = 0; i < seg_count; i++) {
-					start_code[i] = read_ushort(font->fd);
+				for (i = 0; i < subtable->seg_count; i++) {
+					subtable->start_code[i] = read_ushort(font->fd);
 				}
-				for (i = 0; i < seg_count; i++) {
-					id_delta[i] = read_ushort(font->fd);
+				for (i = 0; i < subtable->seg_count; i++) {
+					subtable->id_delta[i] = read_ushort(font->fd);
 				}
-				for (i = 0; i < seg_count; i++) {
-					id_range_offset[i] = read_ushort(font->fd);
+				for (i = 0; i < subtable->seg_count; i++) {
+					subtable->id_range_offset[i] = read_ushort(font->fd);
 				}
 
 				subtable->num_indices = maxp->num_glyphs;
@@ -563,11 +563,11 @@ int load_cmap_subtable(TTF_Font *font, cmap_subTable *subtable) {
 					return 0;
 				}
 
-				for (i = 0; i < seg_count; i++) {
-					uint16_t start = start_code[i];
-					uint16_t end = end_code[i];
-					uint16_t delta = id_delta[i];
-					uint16_t range_offset = id_range_offset[i];
+				for (i = 0; i < subtable->seg_count; i++) {
+					uint16_t start = subtable->start_code[i];
+					uint16_t end = subtable->end_code[i];
+					uint16_t delta = subtable->id_delta[i];
+					uint16_t range_offset = subtable->id_range_offset[i];
 					
 					if (start != (65536-1) && end != (65536-1)) {
 						int j;
@@ -576,7 +576,7 @@ int load_cmap_subtable(TTF_Font *font, cmap_subTable *subtable) {
 								subtable->glyph_index_array[(j + delta) % 65536] = j;
 							} else {
 								uint32_t glyph_offset = cur_pos +
-									((range_offset/2) + (j-start) + (i-seg_count))*2;
+									((range_offset/2) + (j-start) + (i-subtable->seg_count))*2;
 								if (lseek(font->fd, glyph_offset, SEEK_SET) < 0) {
 									warnerr("failed to seek to glyph offset");
 									return 0;
@@ -597,11 +597,6 @@ int load_cmap_subtable(TTF_Font *font, cmap_subTable *subtable) {
 //				entry_selector = 0;
 //				range_shift = 0;
 //				reserved_pad = 0;
-
-				free(end_code);
-				free(start_code);
-				free(id_delta);
-				free(id_range_offset);
 			}
 			break;
 		default:
@@ -1376,7 +1371,7 @@ void print_cmap_table(cmap_Table *cmap) {
 	printf("----------------\n");
 
 	printf("version: 0x%04x\n", cmap->version);
-	printf("numberSubtables: %hd\n", cmap->num_subtables);
+	printf("numberSubtabzles: %hd\n", cmap->num_subtables);
 
 	if (cmap->subtables) {
 		int i;
@@ -1388,6 +1383,7 @@ void print_cmap_table(cmap_Table *cmap) {
 			printf("platformID: %hu\n", subtable->platform_id);
 			printf("platformSpecificID: %hu\n", subtable->platform_specifid_id);
 			printf("offset: %08X\n", subtable->offset);
+			printf("format: %08X\n", subtable->format);
 		}
 	}
 }

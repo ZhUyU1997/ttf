@@ -41,25 +41,20 @@ void warnerr(const char *fmt, ...) {
 	}
 }
 
-int get_text_width(TTF_Font *font, const char *text) {
+int get_text_width(TTF_Font *font, uint32_t *text) {
 	if (!font || !text) {
-		return 0;
-	}
-
-	hmtx_Table *hmtx = get_hmtx_table(font);
-	if (!hmtx) {
-		warn("failed to calculate text width");
 		return 0;
 	}
 
 	int width = 0;
 	/* Get advance width of each character's glyph. */
-	for (int i = 0; i < (int)strlen(text); i++) {
+	for (int i = 0; text[i]; i++) {
 		int32_t glyph_index = get_glyph_index(font, text[i]);
 		if (glyph_index < 0) {
 			continue;
 		}
-		width += roundf(funit_to_pixel(font, hmtx->advance_width[glyph_index]));
+		TTF_Glyph *glyph = get_glyph(font, text[i]);
+		width += roundf(funit_to_pixel(font, get_glyph_advance_width(font, glyph)));
 	}
 
 	return width;
